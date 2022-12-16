@@ -74,12 +74,13 @@ view' sample mwidth mheight margin wrap showsize (State {..}) =
     winSizeProps =
       [ #title := "Compare fonts"
       , on #deleteEvent (const (True, Closed))
+        -- affects wrapping
       , #widthRequest := (case mwidth of
                             Just width -> fromIntegral width
                             Nothing ->
                               let len = T.length sample
-                              in if len < 50
-                              then fromIntegral (6 * len)
+                              in if len < 100
+                              then fromIntegral (10 * len)
                               else 100)
       , #heightRequest := maybe 100 fromIntegral mheight
       ]
@@ -107,7 +108,7 @@ main =
   <*> optional (optionWith auto 'H' "height" "HEIGHT" "Window height")
   <*> optionalWith auto 'm' "margin" "MARGIN" "Margin size [default 10]" 10
   <*> optionalWith auto 'f' "font-size" "SIZE" "Font size [default 16]" 16
-  <*> (not <$> switchWith 'w' "no-wrap" "Disable text wrapping")
+  <*> switchWith 'w' "wrap" "Enable text wrapping"
   <*> (not <$> switchLongWith "hide-font-size" "Hide font size in FontButtons")
   where
     prog :: Maybe SampleText -> Maybe Int -> Maybe Int -> Int -> Int -> Bool
@@ -120,6 +121,7 @@ main =
             mlang <- getLang msample
             lang <- maybe languageGetDefault return mlang
             languageGetSampleString lang
+      print $ T.length sample
       void $ run App { view = view' sample mwidth mheight margin wrap showsize
                      , update = update'
                      , inputs = []

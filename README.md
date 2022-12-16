@@ -3,7 +3,7 @@
 ## Usage
 
 ```shellsession
-$ compare-fonts --lang ja --no-wrap --margin 15
+$ compare-fonts --lang ja
 ```
 
 ![screenshot](compare-fonts.png)
