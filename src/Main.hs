@@ -26,9 +26,9 @@ data Event = Font1Changed Text
            | Font2Changed Text
            | Closed
 
-view' :: Text -> Maybe Int -> Maybe Int -> Bool -> Bool -> State
+view' :: Text -> Maybe Int -> Maybe Int -> Int -> Bool -> Bool -> State
       -> AppView Window Event
-view' sample mwidth mheight wrap showsize (State {..}) =
+view' sample mwidth mheight margin wrap showsize (State {..}) =
   bin
   Window winSizeProps
   $ container
@@ -55,7 +55,8 @@ view' sample mwidth mheight wrap showsize (State {..}) =
     textProps :: Text -> Vector (Attribute Label Event)
     textProps font =
       [ #label := ("<span font=\""<>font<>"\">" <> sample <> "</span>"),
-        #useMarkup := True, #hexpand := True, #vexpand := True, #wrap := wrap]
+        #useMarkup := True, #hexpand := True, #vexpand := True, #wrap := wrap,
+        #margin := fromIntegral margin]
 
     fontProps :: (Text -> Event) -> Text -> Vector (Attribute FontButton Event)
     fontProps ev font =
@@ -95,15 +96,16 @@ main =
   <$> optional
   (SampleText <$> strOptionWith 't' "text" "TEXT" "text to display" <|>
    SampleLang <$> strOptionWith 'l' "lang" "LANG" "sample text by language" )
-  <*> optional (optionLongWith auto "width" "WIDTH" "Window width")
-  <*> optional (optionLongWith auto "height" "HEIGHT" "Window height")
+  <*> optional (optionWith auto 'W' "width" "WIDTH" "Window width")
+  <*> optional (optionWith auto 'H' "height" "HEIGHT" "Window height")
+  <*> optionalWith auto 'm' "margin" "MARGIN" "Margin size [default 10]" 10
   <*> optionalWith auto 'f' "font-size" "SIZE" "Font size [default 16]" 16
-  <*> (not <$> switchWith 'W' "no-wrap" "Disable text wrapping")
+  <*> (not <$> switchWith 'w' "no-wrap" "Disable text wrapping")
   <*> (not <$> switchLongWith "hide-font-size" "Hide font size in FontButtons")
   where
-    prog :: Maybe SampleText -> Maybe Int -> Maybe Int -> Int -> Bool -> Bool
-         -> IO ()
-    prog msample mwidth mheight size wrap showsize = do
+    prog :: Maybe SampleText -> Maybe Int -> Maybe Int -> Int -> Int -> Bool
+         -> Bool -> IO ()
+    prog msample mwidth mheight margin size wrap showsize = do
       sample <-
         case msample of
           Just (SampleText txt) -> return $ T.pack txt
@@ -111,10 +113,11 @@ main =
             mlang <- getLang msample
             lang <- maybe languageGetDefault return mlang
             languageGetSampleString lang
-      void $ run App { view         = view' sample mwidth mheight wrap showsize
-                     , update       = update'
-                     , inputs       = []
-                     , initialState = State
-                                      (T.pack ("Sans " ++ show size))
-                                      (T.pack ("Serif " ++ show size))
+      void $ run App { view = view' sample mwidth mheight margin wrap showsize
+                     , update = update'
+                     , inputs = []
+                     , initialState =
+                         State
+                         (T.pack ("Sans " ++ show size))
+                         (T.pack ("Serif " ++ show size))
                      }
