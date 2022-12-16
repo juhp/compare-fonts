@@ -8,6 +8,7 @@ module Main (main) where
 import Control.Monad ( void )
 import Data.Maybe (fromMaybe)
 import Data.Text ( Text )
+import qualified Data.Text as T
 import Data.Vector (Vector)
 import GI.Gtk
   ( Box(..), FontButton(..), Label(..), Window(..),
@@ -30,8 +31,9 @@ view' sample (State {..}) =
   Window
   [ #title := "Compare fonts"
   , on #deleteEvent (const (True, Closed))
-  -- , #widthRequest := 400
-  -- , #heightRequest := 300
+  , #widthRequest := (let len = T.length sample
+                      in if len < 50 then fromIntegral (6 * len) else 400)
+  -- , #heightRequest := 200
   ]
   $ container
   Box [#orientation := OrientationVertical]
@@ -69,6 +71,8 @@ update' (State _ f2) (Font1Changed fnt) = Transition (State fnt f2) (return Noth
 update' (State f1 _) (Font2Changed fnt) = Transition (State f1 fnt) (return Nothing)
 update' _ Closed = Exit
 
+-- FIXME options for width & height (really want libadwaita)
+-- FIXME --text sample and --font-size
 main :: IO ()
 main = do
   lang <- languageGetDefault

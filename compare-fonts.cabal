@@ -12,7 +12,7 @@ category:            Utility
 homepage:            https://github.com/juhp/compare-fonts
 bug-reports:         https://github.com/juhp/compare-fonts/issues
 build-type:          Simple
---  extra-doc-files:     README.md
+extra-doc-files:     README.md
 --                       ChangeLog.md
 cabal-version:       2.0
 -- tested-with:         GHC == 8.6.5
