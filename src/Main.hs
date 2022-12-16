@@ -17,6 +17,7 @@ import GI.Gtk
 import GI.Gtk.Declarative
 import GI.Gtk.Declarative.App.Simple
 import GI.Pango.Structs.Language
+import SimpleCmdArgs
 
 data State = State {font1 :: Text,
                     font2 :: Text}
@@ -25,16 +26,11 @@ data Event = Font1Changed Text
            | Font2Changed Text
            | Closed
 
-view' :: Text -> State -> AppView Window Event
-view' sample (State {..}) =
+view' :: Text -> Maybe Int -> Maybe Int -> Bool -> Bool -> State
+      -> AppView Window Event
+view' sample mwidth mheight wrap showsize (State {..}) =
   bin
-  Window
-  [ #title := "Compare fonts"
-  , on #deleteEvent (const (True, Closed))
-  , #widthRequest := (let len = T.length sample
-                      in if len < 50 then fromIntegral (6 * len) else 400)
-  -- , #heightRequest := 200
-  ]
+  Window winSizeProps
   $ container
   Box [#orientation := OrientationVertical]
   [
@@ -59,26 +55,66 @@ view' sample (State {..}) =
     textProps :: Text -> Vector (Attribute Label Event)
     textProps font =
       [ #label := ("<span font=\""<>font<>"\">" <> sample <> "</span>"),
-        #useMarkup := True, #hexpand := True, #vexpand := True, #wrap := True]
+        #useMarkup := True, #hexpand := True, #vexpand := True, #wrap := wrap]
 
     fontProps :: (Text -> Event) -> Text -> Vector (Attribute FontButton Event)
     fontProps ev font =
       [ onM #fontSet (fmap (ev . fromMaybe "No default") . fontChooserGetFont),
-        #fontName := font]
+        #fontName := font, #showSize := showsize]
+
+    winSizeProps :: Vector (Attribute Window Event)
+    winSizeProps =
+      [ #title := "Compare fonts"
+      , on #deleteEvent (const (True, Closed))
+      , #widthRequest := (case mwidth of
+                            Just width -> fromIntegral width
+                            Nothing ->
+                              let len = T.length sample
+                              in if len < 50
+                              then fromIntegral (6 * len)
+                              else 100)
+      , #heightRequest := maybe 100 fromIntegral mheight
+      ]
 
 update' :: State -> Event -> Transition State Event
 update' (State _ f2) (Font1Changed fnt) = Transition (State fnt f2) (return Nothing)
 update' (State f1 _) (Font2Changed fnt) = Transition (State f1 fnt) (return Nothing)
 update' _ Closed = Exit
 
--- FIXME options for width & height (really want libadwaita)
--- FIXME --text sample and --font-size
+data SampleText = SampleLang String | SampleText String
+
+getLang :: Maybe SampleText -> IO (Maybe Language)
+getLang (Just (SampleLang l)) = languageFromString (Just (T.pack l))
+getLang _ = return Nothing
+
 main :: IO ()
-main = do
-  lang <- languageGetDefault
-  sample <- languageGetSampleString lang
-  void $ run App { view         = view' sample
-                 , update       = update'
-                 , inputs       = []
-                 , initialState = State "Sans 16" "Serif 16"
-                 }
+main =
+  simpleCmdArgs Nothing "compare-fonts"
+  "GUI tool to compare two fonts" $
+  prog
+  <$> optional
+  (SampleText <$> strOptionWith 't' "text" "TEXT" "text to display" <|>
+   SampleLang <$> strOptionWith 'l' "lang" "LANG" "sample text by language" )
+  <*> optional (optionLongWith auto "width" "WIDTH" "Window width")
+  <*> optional (optionLongWith auto "height" "HEIGHT" "Window height")
+  <*> optionalWith auto 'f' "font-size" "SIZE" "Font size [default 16]" 16
+  <*> (not <$> switchWith 'W' "no-wrap" "Disable text wrapping")
+  <*> (not <$> switchLongWith "hide-font-size" "Hide font size in FontButtons")
+  where
+    prog :: Maybe SampleText -> Maybe Int -> Maybe Int -> Int -> Bool -> Bool
+         -> IO ()
+    prog msample mwidth mheight size wrap showsize = do
+      sample <-
+        case msample of
+          Just (SampleText txt) -> return $ T.pack txt
+          _ -> do
+            mlang <- getLang msample
+            lang <- maybe languageGetDefault return mlang
+            languageGetSampleString lang
+      void $ run App { view         = view' sample mwidth mheight wrap showsize
+                     , update       = update'
+                     , inputs       = []
+                     , initialState = State
+                                      (T.pack ("Sans " ++ show size))
+                                      (T.pack ("Serif " ++ show size))
+                     }

@@ -33,6 +33,7 @@ executable compare-fonts
                        gi-gtk-declarative,
                        gi-gtk-declarative-app-simple,
                        gi-pango,
+                       simple-cmd-args,
                        text,
                        vector
 
