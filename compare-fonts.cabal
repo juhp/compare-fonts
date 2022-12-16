@@ -1,14 +1,14 @@
 name:                compare-fonts
 version:             0.1.0
-synopsis:            One line summary
+synopsis:            GTK tool to compare 2 fonts
 description:
-        Short paragraph here
+        Compare two fonts next to each other on some sample text.
 license:             GPL-3
 license-file:        COPYING
 author:              Jens Petersen <juhpetersen@gmail.com>
 maintainer:          Jens Petersen <juhpetersen@gmail.com>
 copyright:           2022  Jens Petersen <juhpetersen@gmail.com>
-category:            Unclassified
+category:            Utility
 homepage:            https://github.com/juhp/compare-fonts
 bug-reports:         https://github.com/juhp/compare-fonts/issues
 build-type:          Simple
@@ -32,7 +32,9 @@ executable compare-fonts
                        gi-gtk < 4,
                        gi-gtk-declarative,
                        gi-gtk-declarative-app-simple,
-                       text
+                       gi-pango,
+                       text,
+                       vector
 
   default-language:    Haskell2010
   ghc-options:         -Wall -threaded

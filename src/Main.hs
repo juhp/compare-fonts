@@ -6,22 +6,26 @@
 module Main (main) where
 
 import Control.Monad ( void )
---import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe)
 import Data.Text ( Text )
+import Data.Vector (Vector)
 import GI.Gtk
-  ( {-Button(..),-} Box(..), FontButton(..), {-Grid(..),-} Label(..),
-    Window(..), Orientation(OrientationVertical), fontChooserGetFont
+  ( Box(..), FontButton(..), Label(..), Window(..),
+    Orientation(OrientationVertical), fontChooserGetFont
   )
 import GI.Gtk.Declarative
 import GI.Gtk.Declarative.App.Simple
---import GI.Gtk.Declarative.Container.Grid
+import GI.Pango.Structs.Language
 
-data State = State { mfont :: Maybe Text }
+data State = State {font1 :: Text,
+                    font2 :: Text}
 
-data Event = FontChanged (Maybe Text) | Closed
+data Event = Font1Changed Text
+           | Font2Changed Text
+           | Closed
 
-view' :: State -> AppView Window Event
-view' State {..} =
+view' :: Text -> State -> AppView Window Event
+view' sample (State {..}) =
   bin
   Window
   [ #title := "Compare fonts"
@@ -33,33 +37,44 @@ view' State {..} =
   Box [#orientation := OrientationVertical]
   [
     BoxChild
-    { properties = defaultBoxChildProperties -- { width      = 1
-                                             --  , height     = 1
-                                             -- }
-    , child = widget FontButton
-              [ onM #fontSet (fmap FontChanged . fontChooserGetFont),
-                #showStyle := False
-              ]
+    { properties = defaultBoxChildProperties
+    , child = widget FontButton $ fontProps Font1Changed font1
     },
     BoxChild
-    { properties = defaultBoxChildProperties --{ width      = 2
-                                             -- , height     = 1
-                                             -- , leftAttach = 0
-                                             -- , topAttach  = 1
-                                             -- }
-    , child = widget Label
-      [#label := ("<span " <> maybe "" (\f -> "font=\""<>f<>"\"") mfont <> ">Hello world</span>"),
-       #useMarkup := True, #hexpand := True, #vexpand := True]
+    { properties = defaultBoxChildProperties
+    , child = widget Label $ textProps font1
+    },
+    BoxChild
+    { properties = defaultBoxChildProperties
+    , child = widget Label $ textProps font2
+    },
+    BoxChild
+    { properties = defaultBoxChildProperties
+    , child = widget FontButton $ fontProps Font2Changed font2
     }
   ]
+  where
+    textProps :: Text -> Vector (Attribute Label Event)
+    textProps font =
+      [ #label := ("<span font=\""<>font<>"\">" <> sample <> "</span>"),
+        #useMarkup := True, #hexpand := True, #vexpand := True, #wrap := True]
+
+    fontProps :: (Text -> Event) -> Text -> Vector (Attribute FontButton Event)
+    fontProps ev font =
+      [ onM #fontSet (fmap (ev . fromMaybe "No default") . fontChooserGetFont),
+        #fontName := font]
 
 update' :: State -> Event -> Transition State Event
-update' (State _) (FontChanged mfnt) = Transition (State mfnt) (return Nothing)
+update' (State _ f2) (Font1Changed fnt) = Transition (State fnt f2) (return Nothing)
+update' (State f1 _) (Font2Changed fnt) = Transition (State f1 fnt) (return Nothing)
 update' _ Closed = Exit
 
 main :: IO ()
-main = void $ run App { view         = view'
-                      , update       = update'
-                      , inputs       = []
-                      , initialState = State Nothing
-                      }
+main = do
+  lang <- languageGetDefault
+  sample <- languageGetSampleString lang
+  void $ run App { view         = view' sample
+                 , update       = update'
+                 , inputs       = []
+                 , initialState = State "Sans 16" "Serif 16"
+                 }
