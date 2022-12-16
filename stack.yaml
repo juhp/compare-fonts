@@ -1,0 +1,4 @@
+resolver: lts-18.28
+extra-deps:
+  - gi-gtk-declarative-0.7.1
+  - gi-gtk-declarative-app-simple-0.7.1
