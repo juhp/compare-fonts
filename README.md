@@ -13,6 +13,6 @@ Uses Haskell
 
 ## Installation
 
-On Fedora install `ghc-gi-gtk-devel` and then run `cabal install`
+On Fedora install `ghc-gi-gtk-devel` and then run `cabal install`.
 
 Can also build with `stack install` if your Harfbuzz not too new.

@@ -11,8 +11,9 @@ import Data.Text ( Text )
 import qualified Data.Text as T
 import Data.Vector (Vector)
 import GI.Gtk
-  ( Box(..), FontButton(..), Label(..), Window(..),
-    Orientation(OrientationVertical), fontChooserGetFont
+  ( Align(..), Box(..), FontButton(..), Label(..), Window(..),
+    Orientation(OrientationVertical), fontChooserGetFont,
+
   )
 import GI.Gtk.Declarative
 import GI.Gtk.Declarative.App.Simple
@@ -34,10 +35,13 @@ view' sample mwidth mheight margin wrap showsize (State {..}) =
   $ container
   Box [#orientation := OrientationVertical]
   [
-    BoxChild
-    { properties = defaultBoxChildProperties
-    , child = widget FontButton $ fontProps Font1Changed font1
-    },
+    container
+    Box [#margin := fromIntegral margin ]
+    [BoxChild
+     { properties = defaultBoxChildProperties,
+       child = widget FontButton $ fontProps Font1Changed font1
+     }
+    ],
     BoxChild
     { properties = defaultBoxChildProperties
     , child = widget Label $ textProps font1
@@ -46,17 +50,20 @@ view' sample mwidth mheight margin wrap showsize (State {..}) =
     { properties = defaultBoxChildProperties
     , child = widget Label $ textProps font2
     },
-    BoxChild
-    { properties = defaultBoxChildProperties
-    , child = widget FontButton $ fontProps Font2Changed font2
-    }
+    container
+    Box [#margin := fromIntegral margin ]
+    [BoxChild
+     { properties = defaultBoxChildProperties
+     , child = widget FontButton $ fontProps Font2Changed font2
+     }
+    ]
   ]
   where
     textProps :: Text -> Vector (Attribute Label Event)
     textProps font =
       [ #label := ("<span font=\""<>font<>"\">" <> sample <> "</span>"),
         #useMarkup := True, #hexpand := True, #vexpand := True, #wrap := wrap,
-        #margin := fromIntegral margin]
+        #margin := fromIntegral margin, #halign := AlignStart]
 
     fontProps :: (Text -> Event) -> Text -> Vector (Attribute FontButton Event)
     fontProps ev font =
