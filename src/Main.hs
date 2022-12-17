@@ -92,10 +92,6 @@ update' _ Closed = Exit
 
 data SampleText = SampleLang String | SampleText String
 
-getLang :: Maybe SampleText -> IO (Maybe Language)
-getLang (Just (SampleLang l)) = languageFromString (Just (T.pack l))
-getLang _ = return Nothing
-
 main :: IO ()
 main =
   simpleCmdArgs Nothing "compare-fonts"
@@ -117,11 +113,15 @@ main =
       sample <-
         case msample of
           Just (SampleText txt) -> return $ T.pack txt
-          _ -> do
-            mlang <- getLang msample
-            lang <- maybe languageGetDefault return mlang
-            languageGetSampleString lang
-      print $ T.length sample
+          _ ->
+            case msample of
+              Just (SampleLang la) ->
+                -- FIXME check fc orth exists first
+                languageFromString (Just (T.pack la)) -- always succeeds
+                >>= maybe languageGetDefault return
+              _ -> languageGetDefault
+            >>= languageGetSampleString
+      putStrLn $ show (T.length sample) ++ " chars"
       void $ run App { view = view' sample mwidth mheight margin wrap showsize
                      , update = update'
                      , inputs = []
