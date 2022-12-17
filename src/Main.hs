@@ -6,6 +6,7 @@
 module Main (main) where
 
 import Control.Monad ( void )
+import Data.List.Extra (trim)
 import Data.Maybe (fromMaybe)
 import Data.Text ( Text )
 import qualified Data.Text as T
@@ -103,13 +104,15 @@ main =
   <*> optional (optionWith auto 'W' "width" "WIDTH" "Window width")
   <*> optional (optionWith auto 'H' "height" "HEIGHT" "Window height")
   <*> optionalWith auto 'm' "margin" "MARGIN" "Margin size [default 10]" 10
+  <*> strOptionalWith '1' "font1" "FONT" "First font [default Sans]" "Sans"
+  <*> strOptionalWith '2' "font2" "FONT" "Second font [default Serif]" "Serif"
   <*> optionalWith auto 'f' "font-size" "SIZE" "Font size [default 16]" 16
   <*> switchWith 'w' "wrap" "Enable text wrapping"
   <*> (not <$> switchLongWith "hide-font-size" "Hide font size in FontButtons")
   where
-    prog :: Maybe SampleText -> Maybe Int -> Maybe Int -> Int -> Int -> Bool
-         -> Bool -> IO ()
-    prog msample mwidth mheight margin size wrap showsize = do
+    prog :: Maybe SampleText -> Maybe Int -> Maybe Int -> Int
+         -> String -> String -> Int -> Bool -> Bool -> IO ()
+    prog msample mwidth mheight margin font1 font2 size wrap showsize = do
       sample <-
         case msample of
           Just (SampleText txt) -> return $ T.pack txt
@@ -127,6 +130,6 @@ main =
                      , inputs = []
                      , initialState =
                          State
-                         (T.pack ("Sans " ++ show size))
-                         (T.pack ("Serif " ++ show size))
+                         (T.pack (trim font1 ++ " " ++ show size))
+                         (T.pack (trim font2 ++ " " ++ show size))
                      }

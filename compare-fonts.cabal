@@ -29,6 +29,7 @@ executable compare-fonts
 --  other-modules:       Paths_compare_fonts
   hs-source-dirs:      src
   build-depends:       base < 5,
+                       extra,
                        gi-gtk < 4,
                        gi-gtk-declarative,
                        gi-gtk-declarative-app-simple,
