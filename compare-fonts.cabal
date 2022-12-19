@@ -26,7 +26,8 @@ source-repository head
 
 executable compare-fonts
   main-is:             Main.hs
---  other-modules:       Paths_compare_fonts
+  other-modules:       Fonts
+                       Paths_compare_fonts
   hs-source-dirs:      src
   build-depends:       base < 5,
                        extra,
@@ -34,6 +35,7 @@ executable compare-fonts
                        gi-gtk-declarative,
                        gi-gtk-declarative-app-simple,
                        gi-pango,
+                       simple-cmd,
                        simple-cmd-args,
                        text,
                        vector
