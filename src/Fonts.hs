@@ -6,7 +6,7 @@ where
 
 import Data.List.Extra (nubOrd, stripInfix)
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
+--import qualified Data.Text.IO as T
 import GI.Pango.Structs.Language
 import SimpleCmd
 
@@ -20,7 +20,7 @@ fcList faces query = do
 langFontFamilies :: Bool -> Language -> IO [String]
 langFontFamilies faces language = do
   lang <- languageToString language
-  T.putStrLn lang
+--  T.putStrLn lang
   fcList faces [":lang=" ++ T.unpack lang, "family"]
 
 fontFamilies :: Bool -> IO [String]
@@ -46,5 +46,5 @@ familyOrFace face f =
 langMatchFamily :: Bool -> String -> Language -> IO String
 langMatchFamily face f language = do
   lang <- languageToString language
-  T.putStrLn lang
+--  T.putStrLn lang
   fcMatch face [f ++ ":lang=" ++ T.unpack lang, "family"]
