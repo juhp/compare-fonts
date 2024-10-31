@@ -34,7 +34,6 @@ fontFamilies usestyle useface mstyle =
 
 fcMatch :: Bool -> Bool -> String -> IO String
 fcMatch usestyle useface pat = do
---  cmdLog_ "fc-match" $ pat : fcElements usestyle
   res <- cmd "fc-match" $ pat : fcElements usestyle
   return $ familyOrFace usestyle useface res
 
