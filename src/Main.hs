@@ -13,7 +13,9 @@ import Data.Text ( Text )
 import qualified Data.Text as T
 import Data.Vector (Vector)
 import GI.Gtk (Align(..), Box(..), FontButton(..), Label(..), Window(..),
-               Orientation(OrientationVertical), fontChooserGetFont)
+               Orientation(OrientationVertical), fontChooserGetFont,
+               FontChooserLevel(..)
+              )
 import GI.Gtk.Declarative
 import GI.Gtk.Declarative.App.Simple
 import GI.Pango.Structs.Language
@@ -32,9 +34,9 @@ data Event = Font1Changed Text
            | Font2Changed Text
            | Closed
 
-view' :: Text -> Maybe Int -> Maybe Int -> Int -> Maybe Bool -> Bool -> State
-      -> AppView Window Event
-view' sample mwidth mheight margin mwrap showsize (State {..}) =
+view' :: Text -> Maybe Int -> Maybe Int -> Int -> Maybe Bool -> Bool -> Bool
+      -> State -> AppView Window Event
+view' sample mwidth mheight margin mwrap showsize usestyle (State {..}) =
   bin
   Window winSizeProps
   $ container
@@ -77,9 +79,12 @@ view' sample mwidth mheight margin mwrap showsize (State {..}) =
 
     fontProps :: (Text -> Event) -> Text -> Vector (Attribute FontButton Event)
     fontProps ev font =
-      [ onM #fontSet (fmap (ev . fromMaybe "No default") . fontChooserGetFont),
-        #fontName := font,
-        #showSize := showsize]
+      [ onM #fontSet (fmap (ev . fromMaybe "No default") . fontChooserGetFont)
+      , #fontName := font
+      , #showSize := showsize
+      , #level := [if usestyle then FontChooserLevelStyle else FontChooserLevelFamily]
+      , #showStyle := usestyle
+      ]
 
     winSizeProps :: Vector (Attribute Window Event)
     winSizeProps =
@@ -121,6 +126,7 @@ main = do
     <*> optional (fontStyle '1' "1st")
     <*> optional (fontSelector '2' "2nd")
     <*> optional (fontStyle '2' "2nd")
+    <*> switchWith 'S' "use-style" "List font styles"
     <*> switchWith 'f' "use-face" "Use face results rather than families"
     <*> optionalWith auto 's' "font-size" "SIZE" "Font size [default 16]" 16
     <*> optional (flagWith' True 'w' "wrap" "Enable text wrapping" <|>
@@ -139,9 +145,9 @@ main = do
     prog :: Maybe SampleText -> Maybe Int -> Maybe Int -> Int
          -> Maybe FontSelect -> Maybe String
          -> Maybe FontSelect -> Maybe String
-         -> Bool -> Int -> Maybe Bool
+         -> Bool -> Bool -> Int -> Maybe Bool
          -> Bool -> IO ()
-    prog msample mwidth mheight margin mfontsel1 mstyle1 mfontsel2 mstyle2 faces size mwrap showsize = do
+    prog msample mwidth mheight margin mfontsel1 mstyle1 mfontsel2 mstyle2 usestyle faces size mwrap showsize = do
       mlang <-
         case msample of
           Just (SampleLang la) ->
@@ -149,10 +155,10 @@ main = do
             languageFromString (Just (T.pack la)) -- always succeeds
           _ -> return Nothing
       putStr $ "First font: "
-      f1 <- selectFont mlang Nothing faces mfontsel1 mstyle1
+      f1 <- selectFont mlang Nothing usestyle faces mfontsel1 mstyle1
       putStrLn $ f1 ++ "\n"
       putStrLn $ "Second font: "
-      f2 <- selectFont mlang (Just f1) faces mfontsel2 mstyle2
+      f2 <- selectFont mlang (Just f1) usestyle faces mfontsel2 mstyle2
       putStrLn f2
       sample <-
         case msample of
@@ -161,7 +167,7 @@ main = do
                >>= languageGetSampleString
       let samplelen = T.length sample
       putStrLn $ show samplelen +-+ "chars"
-      void $ run App { view = view' sample mwidth mheight margin mwrap showsize
+      void $ run App { view = view' sample mwidth mheight margin mwrap showsize usestyle
                      , update = update'
                      , inputs = []
                      , initialState =
@@ -170,35 +176,36 @@ main = do
                          (T.pack (trim f2 +-+ show size))
                      }
 
-selectFont :: Maybe Language -> Maybe String -> Bool -> Maybe FontSelect
-           -> Maybe String -> IO String
-selectFont mlang mdefault face Nothing mstyle =
+selectFont :: Maybe Language -> Maybe String -> Bool -> Bool
+           -> Maybe FontSelect -> Maybe String -> IO String
+selectFont mlang mdefault usestyle face Nothing mstyle = do
+    print mdefault
     case mlang of
       Nothing -> return $ "Sans" +-+ fromMaybe "" mstyle
       Just lang -> do
         case mdefault of
-          Nothing -> langMatchFamily face "Sans" mstyle lang
+          Nothing -> langMatchFamily usestyle face "Sans" mstyle lang
           Just def -> do
-            fams <- langFontFamilies face mstyle lang
+            fams <- langFontFamilies usestyle face mstyle lang
             case delete def fams of
               [] -> return def
               [other] -> return other
               fs -> chooseFont fs
-selectFont mlang _ face (Just (FontFamily fam)) mstyle =
+selectFont mlang _ usestyle face (Just (FontFamily fam)) mstyle =
   if null fam
   then error' "family name must not be empty"
   else
     case mlang of
       Nothing -> return fam
-      Just lang -> langMatchFamily face fam mstyle lang
-selectFont mlang _ face (Just (FontSubString subs)) mstyle =
+      Just lang -> langMatchFamily usestyle face fam mstyle lang
+selectFont mlang _ usestyle face (Just (FontSubString subs)) mstyle =
   if null (trim subs)
   then error' "substring must not be empty"
   else do
     fams <-
       case mlang of
-        Nothing -> fontFamilies face mstyle
-        Just lang -> langFontFamilies face mstyle lang
+        Nothing -> fontFamilies usestyle face mstyle
+        Just lang -> langFontFamilies usestyle face mstyle lang
     case filter (allWords (words subs) . words) fams of
       [] -> do
         lang <- maybe (return "") (fmap T.unpack . languageToString) mlang
