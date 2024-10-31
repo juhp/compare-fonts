@@ -6,6 +6,7 @@
 module Main (main) where
 
 import Control.Monad ( void )
+import Data.Char (isDigit)
 import Data.List.Extra (trim)
 import Data.Maybe (fromMaybe)
 import Data.Text ( Text )
@@ -100,9 +101,20 @@ view' sample mwidth mheight margin mwrap showsize usestyle (State {..}) =
       ]
 
 update' :: State -> Event -> Transition State Event
-update' (State _ f2) (Font1Changed fnt) = Transition (State fnt f2) (return Nothing)
-update' (State f1 _) (Font2Changed fnt) = Transition (State f1 fnt) (return Nothing)
+update' (State _ f2) (Font1Changed fnt) = Transition (State fnt (adjustSize fnt f2)) (return Nothing)
+update' (State f1 _) (Font2Changed fnt) = Transition (State (adjustSize fnt f1) fnt) (return Nothing)
 update' _ Closed = Exit
+
+adjustSize :: Text -> Text -> Text
+adjustSize other fnt =
+  let osize = sizeOf other
+      fsize = sizeOf fnt
+  in if osize == fsize
+     then fnt
+     else T.replace fsize osize fnt
+  where
+    sizeOf :: Text -> Text
+    sizeOf = T.takeWhileEnd (\c -> isDigit c || c == '.')
 
 data SampleText = SampleLang String | SampleText String
 
