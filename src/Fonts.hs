@@ -52,7 +52,7 @@ familyOrFace usestyle useface font =
         else
           case stripInfix "," font of
             Nothing -> (font,"","")
-            Just (s1,s2) -> (font,s1,s2)
+            Just (f1,_f2) -> (f1,"","")
   in
     case stripInfix "," f of
       Nothing -> f +-+ style
