@@ -27,6 +27,7 @@ source-repository head
 executable compare-fonts
   main-is:             Main.hs
   other-modules:       Fonts
+                       InitialFont
                        Paths_compare_fonts
   hs-source-dirs:      src
   build-depends:       base < 5,
