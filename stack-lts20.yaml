@@ -1,9 +1,10 @@
-resolver: lts-22.39
+resolver: lts-20.26
 extra-deps:
 #  - gi-gtk-declarative-0.7.1
 #  - gi-gtk-declarative-app-simple-0.7.1
   - github: avh4/gi-gtk-declarative
-    commit: 8e7e6a548ab74d44e4314e19dfaa3bafb4381ce8
+    commit: 12385c04baacd2f316c77eebe5bdd5041d0231fb
     subdirs:
       - gi-gtk-declarative
       - gi-gtk-declarative-app-simple
+  - simple-prompt-0.2.0.1
