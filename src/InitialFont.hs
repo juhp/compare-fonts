@@ -63,8 +63,5 @@ chooseFont fs = do
     prompt = do
       i <- promptNonEmpty "Select font"
       if all isDigit i
-        then
-        case lookup (read i) zs of
-          Nothing -> prompt
-          Just f -> return f
+        then maybe prompt return (lookup (read i) zs)
         else prompt

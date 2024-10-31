@@ -80,7 +80,7 @@ view' sample mwidth mheight margin mwrap showsize usestyle (State {..}) =
     fontProps ev font =
       [ onM #fontSet (fmap (ev . fromMaybe "No default") . fontChooserGetFont)
       , #fontName := font
-      , #level := ([if usestyle then FontChooserLevelStyle else FontChooserLevelFamily] ++ [FontChooserLevelSize | showsize])
+      , #level := ((if usestyle then FontChooserLevelStyle else FontChooserLevelFamily) : [FontChooserLevelSize | showsize])
       , #showStyle := usestyle
       , #previewText := sample
       ]
@@ -165,10 +165,10 @@ main = do
             -- FIXME check fc orth exists first
             languageFromString (Just (T.pack la)) -- always succeeds
           _ -> return Nothing
-      putStr $ "First font: "
+      putStr "First font: "
       f1 <- selectFont mlang Nothing usestyle faces mfontsel1 mstyle1
       putStrLn $ f1 ++ "\n"
-      putStrLn $ "Second font: "
+      putStrLn "Second font: "
       f2 <- selectFont mlang (Just f1) usestyle faces mfontsel2 mstyle2
       putStrLn f2
       sample <-
