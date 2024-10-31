@@ -166,8 +166,7 @@ main = do
       sample <-
         case msample of
           Just (SampleText txt) -> return $ T.pack txt
-          _ -> maybe languageGetDefault return mlang
-               >>= languageGetSampleString
+          _ -> languageGetSampleString mlang
       let samplelen = T.length sample
       putStrLn $ show samplelen +-+ "chars"
       void $ run App { view = view' sample mwidth mheight margin mwrap showsize usestyle
