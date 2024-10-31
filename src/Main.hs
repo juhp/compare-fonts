@@ -110,6 +110,9 @@ data SampleText = SampleLang String | SampleText String
 
 data FontSelect = FontFamily String | FontSubString String
 
+defaultSize :: Int
+defaultSize = 24
+
 main :: IO ()
 main = do
   hSetBuffering stdout NoBuffering
@@ -128,7 +131,7 @@ main = do
     <*> optional (fontStyle '2' "2nd")
     <*> switchWith 'S' "use-style" "List font styles"
     <*> switchWith 'f' "use-face" "Use face results rather than families"
-    <*> optionalWith auto 's' "font-size" "SIZE" "Font size [default 16]" 16
+    <*> optionalWith auto 's' "font-size" "SIZE" ("Font size [default" +-+ show defaultSize ++ "]") defaultSize
     <*> optional (flagWith' True 'w' "wrap" "Enable text wrapping" <|>
                   flagWith' False 'n' "no-wrap" "Disable text wrapping")
     <*> (not <$> switchLongWith "hide-font-size" "Hide font size in FontButtons")
