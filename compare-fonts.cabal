@@ -37,6 +37,7 @@ executable compare-fonts
                        gi-pango,
                        simple-cmd,
                        simple-cmd-args,
+                       simple-prompt >= 0.2,
                        text,
                        vector
 

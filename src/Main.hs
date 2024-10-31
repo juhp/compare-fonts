@@ -227,13 +227,10 @@ chooseFont fs = do
     zs = zip [1..length fs] fs
 
     prompt = do
-      putStr $ "Select font: "
-      i <- getLine
+      i <- promptNonEmpty "Select font"
       if all isDigit i
         then
-        let n = read i
-        in
-          case lookup n zs of
-            Nothing -> prompt
-            Just f -> return f
+        case lookup (read i) zs of
+          Nothing -> prompt
+          Just f -> return f
         else prompt
