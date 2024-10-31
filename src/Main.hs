@@ -79,9 +79,9 @@ view' sample mwidth mheight margin mwrap showsize usestyle (State {..}) =
     fontProps ev font =
       [ onM #fontSet (fmap (ev . fromMaybe "No default") . fontChooserGetFont)
       , #fontName := font
-      , #showSize := showsize
-      , #level := [if usestyle then FontChooserLevelStyle else FontChooserLevelFamily]
+      , #level := ([if usestyle then FontChooserLevelStyle else FontChooserLevelFamily] ++ [FontChooserLevelSize | showsize])
       , #showStyle := usestyle
+      , #previewText := sample
       ]
 
     winSizeProps :: Vector (Attribute Window Event)
