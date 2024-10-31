@@ -7,7 +7,7 @@ module Main (main) where
 
 import Control.Monad ( void )
 import Data.Char (isDigit)
-import Data.List.Extra (delete, sort, trim)
+import Data.List.Extra (delete, trim)
 import Data.Maybe (fromMaybe)
 import Data.Text ( Text )
 import qualified Data.Text as T
@@ -19,6 +19,7 @@ import GI.Gtk.Declarative.App.Simple
 import GI.Pango.Structs.Language
 import SimpleCmd ((+-+), error')
 import SimpleCmdArgs
+import SimplePrompt (promptNonEmpty)
 import System.IO (BufferMode(NoBuffering), hSetBuffering, stdout)
 
 import Fonts
@@ -117,7 +118,9 @@ main = do
     <*> optional (optionWith auto 'H' "height" "HEIGHT" "Window height")
     <*> optionalWith auto 'm' "margin" "MARGIN" "Margin size [default 10]" 10
     <*> optional (fontSelector '1' "1st")
+    <*> optional (fontStyle '1' "1st")
     <*> optional (fontSelector '2' "2nd")
+    <*> optional (fontStyle '2' "2nd")
     <*> switchWith 'f' "use-face" "Use face results rather than families"
     <*> optionalWith auto 's' "font-size" "SIZE" "Font size [default 16]" 16
     <*> optional (flagWith' True 'w' "wrap" "Enable text wrapping" <|>
@@ -129,19 +132,28 @@ main = do
       FontFamily <$> strOptionWith s ("font" ++ [s]) "FAMILY" (num +-+ "font family") <|>
       FontSubString <$> strOptionLongWith ("match" ++ [s]) "WORDS" ("Match" +-+ num +-+ "font words")
 
+    fontStyle :: Char -> String -> Parser String
+    fontStyle s num =
+      strOptionLongWith ("style" ++ [s]) "STYLE" (num +-+ "font style")
+
     prog :: Maybe SampleText -> Maybe Int -> Maybe Int -> Int
-         -> Maybe FontSelect -> Maybe FontSelect -> Bool -> Int -> Maybe Bool
+         -> Maybe FontSelect -> Maybe String
+         -> Maybe FontSelect -> Maybe String
+         -> Bool -> Int -> Maybe Bool
          -> Bool -> IO ()
-    prog msample mwidth mheight margin mfontsel1 mfontsel2 faces size mwrap showsize = do
+    prog msample mwidth mheight margin mfontsel1 mstyle1 mfontsel2 mstyle2 faces size mwrap showsize = do
       mlang <-
         case msample of
           Just (SampleLang la) ->
             -- FIXME check fc orth exists first
             languageFromString (Just (T.pack la)) -- always succeeds
           _ -> return Nothing
-      f1 <- selectFont mlang Nothing faces mfontsel1
-      f2 <- selectFont mlang (Just f1) faces mfontsel2
-      print (f1,f2)
+      putStr $ "First font: "
+      f1 <- selectFont mlang Nothing faces mfontsel1 mstyle1
+      putStrLn $ f1 ++ "\n"
+      putStrLn $ "Second font: "
+      f2 <- selectFont mlang (Just f1) faces mfontsel2 mstyle2
+      putStrLn f2
       sample <-
         case msample of
           Just (SampleText txt) -> return $ T.pack txt
@@ -158,35 +170,35 @@ main = do
                          (T.pack (trim f2 +-+ show size))
                      }
 
--- FIX param for Sans/Serif/Mono style
-selectFont :: Maybe Language -> Maybe String -> Bool -> Maybe FontSelect -> IO String
-selectFont mlang mdefault face Nothing =
+selectFont :: Maybe Language -> Maybe String -> Bool -> Maybe FontSelect
+           -> Maybe String -> IO String
+selectFont mlang mdefault face Nothing mstyle =
     case mlang of
-      Nothing -> return "Sans"
+      Nothing -> return $ "Sans" +-+ fromMaybe "" mstyle
       Just lang -> do
         case mdefault of
-          Nothing -> langMatchFamily face "Sans" lang
+          Nothing -> langMatchFamily face "Sans" mstyle lang
           Just def -> do
-            fams <- langFontFamilies face lang
+            fams <- langFontFamilies face mstyle lang
             case delete def fams of
               [] -> return def
               [other] -> return other
               fs -> chooseFont fs
-selectFont mlang _ face (Just (FontFamily fam)) =
+selectFont mlang _ face (Just (FontFamily fam)) mstyle =
   if null fam
   then error' "family name must not be empty"
   else
     case mlang of
       Nothing -> return fam
-      Just lang -> langMatchFamily face fam lang
-selectFont mlang _ face (Just (FontSubString subs)) =
+      Just lang -> langMatchFamily face fam mstyle lang
+selectFont mlang _ face (Just (FontSubString subs)) mstyle =
   if null (trim subs)
   then error' "substring must not be empty"
   else do
     fams <-
       case mlang of
-        Nothing -> fontFamilies face
-        Just lang -> langFontFamilies face lang
+        Nothing -> fontFamilies face mstyle
+        Just lang -> langFontFamilies face mstyle lang
     case filter (allWords (words subs) . words) fams of
       [] -> do
         lang <- maybe (return "") (fmap T.unpack . languageToString) mlang
@@ -203,7 +215,7 @@ chooseFont fs = do
   mapM_ (\(n,f) -> putStrLn (show n ++ "." +-+ f)) zs
   prompt
   where
-    zs = zip [1..length fs] $ sort fs
+    zs = zip [1..length fs] fs
 
     prompt = do
       putStr $ "Select font: "
