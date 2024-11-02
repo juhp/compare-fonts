@@ -68,7 +68,7 @@ view' sample mwidth mheight margin mwrap showsize usestyle (State {..}) =
     wrap =
       case mwrap of
         Just w -> w
-        Nothing -> T.length sample > 100
+        Nothing -> maxLength sample > 100
 
     textProps :: Text -> Vector (Attribute Label Event)
     textProps font =
@@ -99,6 +99,9 @@ view' sample mwidth mheight margin mwrap showsize usestyle (State {..}) =
                               else 100)
       , #heightRequest := maybe 100 fromIntegral mheight
       ]
+
+maxLength :: Text -> Int
+maxLength = maximum . (0 :) . map T.length . T.lines
 
 update' :: State -> Event -> Transition State Event
 update' (State _ f2) (Font1Changed fnt) = Transition (State fnt (adjustSize fnt f2)) (return Nothing)
