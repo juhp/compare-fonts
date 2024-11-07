@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP  #-}
 {-# LANGUAGE OverloadedLabels  #-}
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -9,6 +10,9 @@ import Control.Monad ( void )
 import Data.Char (isDigit)
 import Data.List.Extra (trim)
 import Data.Maybe (fromMaybe)
+#if MIN_VERSION_extra(1,7,13)
+import Data.Monoid.Extra (mwhen)
+#endif
 import Data.Text ( Text )
 import qualified Data.Text as T
 import Data.Vector (Vector)
@@ -34,8 +38,8 @@ data Event = Font1Changed Text
            | Closed
 
 view' :: Text -> Maybe Int -> Maybe Int -> Int -> Maybe Bool -> Bool -> Bool
-      -> State -> AppView Window Event
-view' sample mwidth mheight margin mwrap showsize usestyle (State {..}) =
+      -> Bool -> State -> AppView Window Event
+view' sample mwidth mheight margin mwrap showsize usestyle nofallback (State {..}) =
   bin
   Window winSizeProps
   $ container
@@ -72,7 +76,7 @@ view' sample mwidth mheight margin mwrap showsize usestyle (State {..}) =
 
     textProps :: Text -> Vector (Attribute Label Event)
     textProps font =
-      [ #label := ("<span font=\""<>font<>"\">" <> sample <> "</span>"),
+      [ #label := ("<span font=\""<>font<>"\"" <> mwhen nofallback " fallback=\"false\"" <> ">" <> sample <> "</span>"),
         #useMarkup := True, #hexpand := True, #vexpand := True, #wrap := wrap,
         #margin := fromIntegral margin, #halign := AlignStart]
 
@@ -146,6 +150,7 @@ main = do
     <*> optional (flagWith' True 'w' "wrap" "Enable text wrapping" <|>
                   flagWith' False 'n' "no-wrap" "Disable text wrapping")
     <*> (not <$> switchLongWith "hide-font-size" "Hide font size in FontButtons")
+    <*> switchLongWith "no-fallback" "Disable pango font fallback"
   where
     fontSelector :: Char -> String -> Parser FontSelect
     fontSelector s num =
@@ -160,8 +165,8 @@ main = do
          -> Maybe FontSelect -> Maybe String
          -> Maybe FontSelect -> Maybe String
          -> Bool -> Bool -> Int -> Maybe Bool
-         -> Bool -> IO ()
-    prog msample mwidth mheight margin mfontsel1 mstyle1 mfontsel2 mstyle2 usestyle faces size mwrap showsize = do
+         -> Bool -> Bool -> IO ()
+    prog msample mwidth mheight margin mfontsel1 mstyle1 mfontsel2 mstyle2 usestyle useface size mwrap showsize nofallback = do
       mlang <-
         case msample of
           Just (SampleLang la) ->
@@ -169,10 +174,10 @@ main = do
             languageFromString (Just (T.pack la)) -- always succeeds
           _ -> return Nothing
       putStr "First font: "
-      f1 <- selectFont mlang Nothing usestyle faces mfontsel1 mstyle1
+      f1 <- selectFont mlang Nothing usestyle useface mfontsel1 mstyle1
       putStrLn $ f1 ++ "\n"
       putStrLn "Second font: "
-      f2 <- selectFont mlang (Just f1) usestyle faces mfontsel2 mstyle2
+      f2 <- selectFont mlang (Just f1) usestyle useface mfontsel2 mstyle2
       putStrLn f2
       sample <-
         case msample of
@@ -180,7 +185,7 @@ main = do
           _ -> languageGetSampleString mlang
       let samplelen = T.length sample
       putStrLn $ show samplelen +-+ "chars"
-      void $ run App { view = view' sample mwidth mheight margin mwrap showsize usestyle
+      void $ run App { view = view' sample mwidth mheight margin mwrap showsize usestyle nofallback
                      , update = update'
                      , inputs = []
                      , initialState =
@@ -188,3 +193,8 @@ main = do
                          (T.pack (trim f1 +-+ show size))
                          (T.pack (trim f2 +-+ show size))
                      }
+
+#if !MIN_VERSION_extra(1,7,13)
+mwhen :: Monoid a => Bool -> a -> a
+mwhen b x = if b then x else mempty
+#endif
