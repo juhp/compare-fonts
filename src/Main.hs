@@ -182,7 +182,13 @@ main = do
         case msample of
           Just (SampleText txt) -> return $ T.pack txt
           _ -> do
-            txt <- languageGetSampleString mlang
+            txt <-
+#if MIN_VERSION_gi_pango(1,0,30)
+              languageGetSampleString mlang
+#else
+              maybe languageGetDefault return mlang
+              >>= languageGetSampleString
+#endif
             mapM_ T.putStrLn $ T.lines txt
             return txt
       putStrLn $ show (T.length sample) +-+ "chars"
