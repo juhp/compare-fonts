@@ -35,6 +35,7 @@ executable compare-fonts
                        gi-gtk-declarative,
                        gi-gtk-declarative-app-simple,
                        gi-pango,
+                       safe,
                        simple-cmd,
                        simple-cmd-args,
                        simple-prompt >= 0.2,

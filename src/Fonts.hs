@@ -8,6 +8,7 @@ import Data.List.Extra (nubSort, replace, stripInfix)
 import qualified Data.Text as T
 --import qualified Data.Text.IO as T
 import GI.Pango.Structs.Language
+import Safe
 import SimpleCmd
 
 fcElements :: Bool -> [String]
@@ -58,7 +59,7 @@ familyOrFace usestyle useface font =
       Nothing -> f +-+ style
       Just (fam,fac) ->
         if useface
-        then if head (words fam) == "Droid"
+        then if headMay (words fam) == Just "Droid"
              then fam +-+ style
              else fac +-+ facestyle
         else fam +-+ style
