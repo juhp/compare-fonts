@@ -53,6 +53,7 @@ familyOrFace usestyle useface font =
             Nothing -> (font,"","")
             Just (f1,_f2) -> (f1,"","")
   in
+    filter (/= '\\') $
     case stripInfix "," f of
       Nothing -> f +-+ style
       Just (fam,fac) ->
