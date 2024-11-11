@@ -25,6 +25,7 @@ source-repository head
 
 executable compare-fonts
   main-is:             Main.hs
+  autogen-modules:     Paths_compare_fonts
   other-modules:       Fonts
                        InitialFont
                        Paths_compare_fonts
