@@ -180,19 +180,16 @@ main = do
             -- FIXME check fc orth exists first
             languageFromString (Just (T.pack la)) -- always succeeds
           _ -> return Nothing
-      putStr "First font: "
-      f1 <- selectFont mlang Nothing usestyle useface mfontsel1 mstyle1
-      putStrLn $ f1 ++ "\n"
-      putStrLn "Second font: "
-      f2 <- selectFont mlang (Just f1) usestyle useface mfontsel2 mstyle2
-      putStrLn f2
+      f1 <- selectFont "First" mlang Nothing usestyle useface mfontsel1 mstyle1
+      f2 <- selectFont "Second" mlang (Just f1) usestyle useface mfontsel2 mstyle2
       sample <-
         case msample of
           Just (SampleText txt) -> return $ T.pack txt
-          _ -> languageGetSampleString mlang
-      let samplelen = T.length sample
-      putStrLn $ show samplelen +-+ "chars"
-      mapM_ T.putStrLn $ T.lines sample
+          _ -> do
+            txt <- languageGetSampleString mlang
+            mapM_ T.putStrLn $ T.lines txt
+            return txt
+      putStrLn $ show (T.length sample) +-+ "chars"
       -- print $ neededWidth size sample
       void $ run App { view = view' sample size mwidth mheight margin mwrap showsize usestyle nofallback
                      , update = update'
