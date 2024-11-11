@@ -56,6 +56,15 @@ Available options:
 
 compare-fonts is packaged for Fedora in [copr](https://copr.fedorainfracloud.org/coprs/petersen/compare-fonts/).
 
+## Building from source
+
 On Fedora install `ghc-gi-gtk-devel` and then run `cabal install`.
 
 Can also build with `stack install`.
+
+## Related projects
+
+I should mention [fonts-compare](https://github.com/sudipshil9862/fonts-compare) which pre-dates this project.
+
+My main motivation for starting this project was to try to use
+a declarative UI over GTK.
