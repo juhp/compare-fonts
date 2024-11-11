@@ -1,5 +1,7 @@
 # compare-fonts
 
+A tool for comparing 2 fonts using Gtk3.
+
 ## Usage
 
 ```shellsession
@@ -17,12 +19,12 @@ Uses Haskell
 ```
 compare-fonts
 
-Usage: compare-fonts [--version] [(-t|--text TEXT) | (-l|--lang LANG)] 
-                     [-W|--width WIDTH] [-H|--height HEIGHT] 
+Usage: compare-fonts [--version] [(-t|--text TEXT) | (-l|--lang LANG)]
+                     [-W|--width WIDTH] [-H|--height HEIGHT]
                      [-m|--margin MARGIN] [(-1|--font1 FAMILY) | --match1 WORDS]
-                     [--style1 STYLE] [(-2|--font2 FAMILY) | --match2 WORDS] 
-                     [--style2 STYLE] [-S|--use-style] [-f|--use-face] 
-                     [-s|--font-size SIZE] [(-w|--wrap) | (-n|--no-wrap)] 
+                     [--style1 STYLE] [(-2|--font2 FAMILY) | --match2 WORDS]
+                     [--style2 STYLE] [-S|--use-style] [-f|--use-face]
+                     [-s|--font-size SIZE] [(-w|--wrap) | (-n|--no-wrap)]
                      [--hide-font-size] [--no-fallback]
 
   GUI tool to compare two fonts
@@ -52,6 +54,8 @@ Available options:
 
 ## Installation
 
+compare-fonts is packaged for Fedora in [copr](https://copr.fedorainfracloud.org/coprs/petersen/compare-fonts/).
+
 On Fedora install `ghc-gi-gtk-devel` and then run `cabal install`.
 
-Can also build with `stack install` if your Harfbuzz not too new.
+Can also build with `stack install`.
