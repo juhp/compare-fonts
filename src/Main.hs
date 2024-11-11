@@ -105,11 +105,7 @@ view' sample size mwidth mheight margin mwrap showsize usestyle nofallback (Stat
 neededWidth :: Int -> Text -> Int32
 neededWidth size txt =
   fromIntegral $
-  size *
-  let len = maxLength txt
-  in if len < 100
-     then len
-     else 100
+  size * min (maxLength txt) 100
 
 maxLength :: Text -> Int
 maxLength = maximum . (0 :) . map T.length . T.lines
