@@ -23,7 +23,7 @@ Usage: compare-fonts [--version] [(-t|--text TEXT) | (-l|--lang LANG)]
                      [--style1 STYLE] [(-2|--font2 FAMILY) | --match2 WORDS] 
                      [--style2 STYLE] [-S|--use-style] [-f|--use-face] 
                      [-s|--font-size SIZE] [(-w|--wrap) | (-n|--no-wrap)] 
-                     [--hide-font-size]
+                     [--hide-font-size] [--no-fallback]
 
   GUI tool to compare two fonts
 
@@ -47,6 +47,7 @@ Available options:
   -w,--wrap                Enable text wrapping
   -n,--no-wrap             Disable text wrapping
   --hide-font-size         Hide font size in FontButtons
+  --no-fallback            Disable pango font fallback
 ```
 
 ## Installation
