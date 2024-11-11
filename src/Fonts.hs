@@ -6,7 +6,6 @@ where
 
 import Data.List.Extra (nubSort, replace, stripInfix)
 import qualified Data.Text as T
---import qualified Data.Text.IO as T
 import GI.Pango.Structs.Language
 import Safe
 import SimpleCmd
@@ -67,7 +66,6 @@ familyOrFace usestyle useface font =
 langMatchFamily :: Bool -> Bool -> String -> Maybe String -> Language -> IO String
 langMatchFamily usestyle useface f mstyle language = do
   lang <- languageToString language
---  T.putStrLn lang
   res <- fcMatch usestyle useface $ f ++ ":lang=" ++ T.unpack lang ++ maybeStyle mstyle
   return $ replaceStyle res
 
