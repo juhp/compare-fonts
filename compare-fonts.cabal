@@ -13,7 +13,7 @@ homepage:            https://github.com/juhp/compare-fonts
 bug-reports:         https://github.com/juhp/compare-fonts/issues
 build-type:          Simple
 extra-doc-files:     README.md
---                       ChangeLog.md
+                     ChangeLog.md
 cabal-version:       2.0
 tested-with:         GHC == 9.4.8
                      || == 9.6.6
