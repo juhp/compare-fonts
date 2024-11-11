@@ -14,8 +14,10 @@ import Data.Maybe (fromMaybe)
 import Data.Monoid.Extra (mwhen)
 #endif
 import Data.Text ( Text )
+import qualified Data.Text.IO as T
 import qualified Data.Text as T
 import Data.Vector (Vector)
+import GHC.Int(Int32)
 import GI.Gtk (Align(..), Box(..), FontButton(..), Label(..), Window(..),
                Orientation(OrientationVertical), fontChooserGetFont,
                FontChooserLevel(..)
@@ -37,9 +39,9 @@ data Event = Font1Changed Text
            | Font2Changed Text
            | Closed
 
-view' :: Text -> Maybe Int -> Maybe Int -> Int -> Maybe Bool -> Bool -> Bool
-      -> Bool -> State -> AppView Window Event
-view' sample mwidth mheight margin mwrap showsize usestyle nofallback (State {..}) =
+view' :: Text -> Int -> Maybe Int -> Maybe Int -> Int -> Maybe Bool -> Bool
+      -> Bool -> Bool -> State -> AppView Window Event
+view' sample size mwidth mheight margin mwrap showsize usestyle nofallback (State {..}) =
   bin
   Window winSizeProps
   $ container
@@ -96,13 +98,18 @@ view' sample mwidth mheight margin mwrap showsize usestyle nofallback (State {..
         -- affects wrapping
       , #widthRequest := (case mwidth of
                             Just width -> fromIntegral width
-                            Nothing ->
-                              let len = T.length sample
-                              in if len < 100
-                              then fromIntegral (10 * len)
-                              else 100)
+                            Nothing -> neededWidth size sample)
       , #heightRequest := maybe 100 fromIntegral mheight
       ]
+
+neededWidth :: Int -> Text -> Int32
+neededWidth size txt =
+  fromIntegral $
+  size *
+  let len = maxLength txt
+  in if len < 100
+     then len
+     else 100
 
 maxLength :: Text -> Int
 maxLength = maximum . (0 :) . map T.length . T.lines
@@ -185,7 +192,9 @@ main = do
           _ -> languageGetSampleString mlang
       let samplelen = T.length sample
       putStrLn $ show samplelen +-+ "chars"
-      void $ run App { view = view' sample mwidth mheight margin mwrap showsize usestyle nofallback
+      mapM_ T.putStrLn $ T.lines sample
+      -- print $ neededWidth size sample
+      void $ run App { view = view' sample size mwidth mheight margin mwrap showsize usestyle nofallback
                      , update = update'
                      , inputs = []
                      , initialState =
